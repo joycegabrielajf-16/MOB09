@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)https://almeida-cma.github.io/mob09/3-quiz.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 Simulado Técnico: Manutenção e Evolução de CRUD com LocalStorage</title>
+    <style>
+        /* ============================================================
+           ESTILOS BASE (TEMA DARK CYBER-ACADÊMICO)
+           ============================================================ */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* BOTÃO VOLTAR AO TOPO */
+        .btn-topo {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #0f172a;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(56,189,248,0.3);
+            transition: all 0.25s;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .btn-topo:hover { transform: scale(1.1) translateY(-3px); }
+        .btn-topo.oculto { opacity: 0; pointer-events: none; transform: scale(0.5); }
+
+        /* BOTÃO MOBILE */
+        .btn-menu-flutuante {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #0f172a;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(56,189,248,0.3);
+            transition: all 0.25s;
+            z-index: 1400;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay-menu {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .overlay-menu.ativo { opacity: 1; pointer-events: auto; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 320px;
+            background: #1e293b;
+            padding: 22px 16px;
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-right: 1px solid #334155;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-logo {
+            font-size: 1.15rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-sub {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        /* BARRA DE PROGRESSO */
+        .card-progresso {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 18px;
+        }
+        .progresso-texto {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .progresso-barra-fundo {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progresso-barra-preenchimento {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            transition: width 0.3s ease;
+        }
+
+        .categoria-titulo {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 1.5px;
+            margin: 16px 0 8px;
+            padding-left: 8px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            transition: all 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .sidebar-item:hover { background: #334155; color: #fff; }
+        .sidebar-item.ativo {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #0f172a;
+            font-weight: 800;
+        }
+        .sidebar-item .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #475569;
+        }
+        .sidebar-item .status-dot.respondido { background: #38bdf8; }
+
+        /* ÁREA PRINCIPAL */
+        .main {
+            margin-left: 320px;
+            flex: 1;
+            padding: 30px 40px 100px;
+            min-height: 100vh;
+        }
+
+        .main-header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .main-header p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .meta-tag {
+            display: inline-block;
+            background: #0369a1;
+            color: #bae6fd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-top: 8px;
+            border: 1px solid #38bdf8;
+        }
+
+        /* CARD DE QUESTÃO */
+        .card-questao {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+
+        .enunciado {
+            font-size: 1.05rem;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: #f8fafc;
+        }
+
+        .bloco-codigo-enunciado {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #93c5fd;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-bottom: 18px;
+        }
+
+        /* ALTERNATIVAS */
+        .lista-alternativas {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .opcao-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .opcao-item:hover {
+            border-color: #38bdf8;
+            background: #1e293b;
+        }
+        .opcao-item.selecionada {
+            border-color: #38bdf8;
+            background: rgba(56,189,248,0.12);
+        }
+        .opcao-item input[type="radio"] {
+            margin-top: 4px;
+            accent-color: #38bdf8;
+            cursor: pointer;
+        }
+        .opcao-item .texto-opcao {
+            font-size: 0.92rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+        .opcao-item .texto-opcao code {
+            background: #1e293b;
+            color: #facc15;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        /* FEEDBACK / GABARITO */
+        .painel-feedback {
+            display: none;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            animation: fadeIn 0.3s ease;
+        }
+        .painel-feedback.correto {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
+        }
+        .painel-feedback.incorreto {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+        .painel-feedback strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+
+        /* BOTÕES DE CONTROLE */
+        .barra-acoes {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+            border-top: 1px solid #334155;
+            padding-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-confirmar {
+            background: linear-gradient(135deg, #0284c7, #0284c7);
+            color: white;
+        }
+        .btn-confirmar:hover {
+            background: #0369a1;
+            box-shadow: 0 4px 14px rgba(2,132,199,0.4);
+        }
+        .btn-nav {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        .btn-nav:hover { background: #475569; }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+        }
+        .btn-pdf:hover { background: #059669; transform: translateY(-2px); }
+
+        /* MODAL / TELA DE RESULTADO PDF */
+        #painelRelatorioFinal {
+            display: none;
+            background: #1e293b;
+            border: 1px solid #38bdf8;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        .placar-resumo {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin: 20px 0;
+            background: #0f172a;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #334155;
+        }
+        .placar-item .numero {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #38bdf8;
+        }
+        .placar-item .rotulo {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* ESTILOS DE IMPRESSÃO / PDF NATIVO */
+        @media print {
+            body {
+                background: #fff !important;
+                color: #000 !important;
+            }
+            .sidebar, .btn-topo, .btn-menu-flutuante, .barra-acoes, .btn-pdf {
+                display: none !important;
+            }
+            .main {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            #painelRelatorioFinal {
+                display: block !important;
+                border: none !important;
+                padding: 0 !important;
+                color: #000 !important;
+            }
+            .placar-resumo {
+                border: 1px solid #000 !important;
+                background: #f8fafc !important;
+                color: #000 !important;
+            }
+            .placar-item .numero { color: #000 !important; }
+            .card-questao {
+                page-break-inside: avoid;
+                border: 1px solid #ccc !important;
+                background: #fff !important;
+                color: #000 !important;
+                margin-bottom: 20px !important;
+            }
+            .enunciado { color: #000 !important; }
+            .bloco-codigo-enunciado {
+                background: #f1f5f9 !important;
+                color: #0f172a !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+            .painel-feedback {
+                display: block !important;
+                background: #f8fafc !important;
+                border: 1px solid #000 !important;
+                color: #000 !important;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.aberta { transform: translateX(0); }
+            .main { margin-left: 0; padding: 20px 16px 110px; }
+            .btn-menu-flutuante { display: flex; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<button class="btn-topo" id="btnTopo" onclick="voltarAoTopo()" title="Voltar ao início">⬆️</button>
+
+<button class="btn-menu-flutuante" id="btnMenuFlutuante" onclick="toggleMenu()" aria-label="Abrir menu">☰</button>
+
+<div class="overlay-menu" id="overlayMenu" onclick="fecharMenu()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">📝 SIMULADO TÉCNICO</div>
+    <div class="sidebar-sub">Evolução e Manutenção CRUD</div>
+
+    <div class="card-progresso">
+        <div class="progresso-texto">
+            <span>Progresso Geral</span>
+            <span id="txtProgresso">10 / 10 (100%)</span>
+        </div>
+        <div class="progresso-barra-fundo">
+            <div class="progresso-barra-preenchimento" id="barraProgresso" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <div class="categoria-titulo">Questões de Fixação</div>
+    <div id="sidebarQuestoes"><button class="sidebar-item" id="btnNavQ_1">
+                <span>Q1. Declaração Semântica do Novo Campo</span>
+                <span class="status-dot respondido" id="dot_1"></span>
+            </button><button class="sidebar-item" id="btnNavQ_2">
+                <span>Q2. Alinhamento Estrutural da Tabela</span>
+                <span class="status-dot respondido" id="dot_2"></span>
+            </button><button class="sidebar-item" id="btnNavQ_3">
+                <span>Q3. Impacto da Estilização na Nova Coluna</span>
+                <span class="status-dot respondido" id="dot_3"></span>
+            </button><button class="sidebar-item" id="btnNavQ_4">
+                <span>Q4. Construção do Objeto em Memória</span>
+                <span class="status-dot respondido" id="dot_4"></span>
+            </button><button class="sidebar-item" id="btnNavQ_5">
+                <span>Q5. Resetando os Inputs Após o Cadastro</span>
+                <span class="status-dot respondido" id="dot_5"></span>
+            </button><button class="sidebar-item" id="btnNavQ_6">
+                <span>Q6. Tratamento de Dados Legados com Nullish Coalescing</span>
+                <span class="status-dot respondido" id="dot_6"></span>
+            </button><button class="sidebar-item" id="btnNavQ_7">
+                <span>Q7. Carregando Dados no Formulário</span>
+                <span class="status-dot respondido" id="dot_7"></span>
+            </button><button class="sidebar-item" id="btnNavQ_8">
+                <span>Q8. Persistindo a Modificação de um Registro Existente</span>
+                <span class="status-dot respondido" id="dot_8"></span>
+            </button><button class="sidebar-item" id="btnNavQ_9">
+                <span>Q9. Adaptação da Função persistir() e carregar()</span>
+                <span class="status-dot respondido" id="dot_9"></span>
+            </button><button class="sidebar-item ativo" id="btnNavQ_10">
+                <span>Q10. Compatibilidade de Backup com Exportar() e Importar()</span>
+                <span class="status-dot respondido" id="dot_10"></span>
+            </button></div>
+
+    <div style="margin-top: 24px;">
+        <button class="btn btn-pdf" style="width: 100%; justify-content: center;" onclick="gerarRelatorioFinal()">
+            📄 Gerar Relatório / PDF
+        </button>
+    </div>
+</aside>
+
+<main class="main" id="inicioPrincipal">
+    <div class="main-header">
+        <h1>Simulado de Manutenção: Adicionando Novos Campos</h1>
+        <p>Avalie sua capacidade técnica de realizar intervenções precisas na estrutura de persistência local, interface DOM e serialização JSON.</p>
+        <span class="meta-tag" id="metaCategoria">Questão 10 de 10 • Categoria: 7. I/O e Exportação</span>
+    </div>
+
+    <!-- ÁREA DINÂMICA DA QUESTÃO ATUAL -->
+    <div id="containerQuestao">
+            <div class="card-questao">
+                <div class="enunciado">
+                    <span style="color:#38bdf8;">#10.</span> Ao exportar e importar o arquivo JSON via <code>Blob</code> e <code>FileReader</code>, o que ocorrerá com os alunos que agora possuem o campo idade?
+                </div>
+
+                <pre class="bloco-codigo-enunciado">// Exportação via Blob:
+const texto = JSON.stringify(alunos, null, 2);
+const blob = new Blob([texto], { type: "application/json" });</pre>
+
+                <div class="lista-alternativas">
+                    
+                <label class="opcao-item selecionada" onclick="selecionarOpcao(10, 'A')">
+                    <input type="radio" name="opcao_10" value="A" checked="">
+                    <div class="texto-opcao">
+                        <strong>A)</strong> O arquivo <code>alunos.json</code> baixado conterá automaticamente a propriedade <code>"idade"</code> em cada aluno, e a importação a restaurará sem precisar de nenhuma linha a mais de código.
+                    </div>
+                </label>
+            
+                <label class="opcao-item " onclick="selecionarOpcao(10, 'B')">
+                    <input type="radio" name="opcao_10" value="B">
+                    <div class="texto-opcao">
+                        <strong>B)</strong> O navegador recusará o download porque o MIME-type não aceita novos atributos.
+                    </div>
+                </label>
+            
+                <label class="opcao-item " onclick="selecionarOpcao(10, 'C')">
+                    <input type="radio" name="opcao_10" value="C">
+                    <div class="texto-opcao">
+                        <strong>C)</strong> A importação falhará porque o <code>FileReader</code> só aceita strings com até 2 propriedades por objeto.
+                    </div>
+                </label>
+            
+                <label class="opcao-item " onclick="selecionarOpcao(10, 'D')">
+                    <input type="radio" name="opcao_10" value="D">
+                    <div class="texto-opcao">
+                        <strong>D)</strong> O campo idade será apagado durante o download.
+                    </div>
+                </label>
+            
+                </div>
+
+                <div id="areaFeedback_10">
+                    
+                <div class="painel-feedback correto" style="display: block;">
+                    <strong>✅ Resposta Correta! (Gabarito: A)</strong>
+                    Por trabalhar diretamente com strings JSON válidas, tanto a exportação (via Blob) quanto a leitura de arquivo (via <code>FileReader</code> e <code>JSON.parse</code>) são universais. Qualquer propriedade adicionada aos objetos em memória é salva e recarregada sem alterações nos métodos de I/O.
+                </div>
+            
+                </div>
+
+                <div class="barra-acoes">
+                    <div>
+                        <button class="btn btn-nav" onclick="irParaQuestao(8)">
+                            ◀ Anterior
+                        </button>
+                        <button class="btn btn-nav" onclick="irParaQuestao(10)" disabled="" style="opacity:0.4;cursor:not-allowed;">
+                            Próxima ▶
+                        </button>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-confirmar" onclick="confirmarResposta(10)">
+                            ✔️ Confirmar Resposta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- PAINEL FINAL DE EXPORTAÇÃO EM PDF -->
+    <div id="painelRelatorioFinal" style="display: block;">
+        <h2 style="color: #38bdf8; margin-bottom: 8px;">Relatório Oficial de Desempenho e Gabarito</h2>
+        <p style="color: #94a3b8; font-size: 0.85rem;" id="dataEmissao">Avaliação técnica gerada em: 05/10/2026, 14:07:14</p>
+
+        <div class="placar-resumo">
+            <div class="placar-item">
+                <div class="numero" id="placarAcertos">10</div>
+                <div class="rotulo">Acertos</div>
+            </div>
+            <div class="placar-item">
+                <div class="numero" id="placarErros" style="color: #ef4444;">0</div>
+                <div class="rotulo">Erros</div>
+            </div>
+            <div class="placar-item">
+                <div class="numero" id="placarAproveitamento" style="color: #10b981;">100%</div>
+                <div class="rotulo">Aproveitamento</div>
+            </div>
+        </div>
+
+        <div id="detalhamentoQuestoesPDF">
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #1: Declaração Semântica do Novo Campo [1. Camada HTML]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Para permitir que o usuário digite a idade de um novo aluno, precisamos inserir um novo elemento de formulário antes do botão Salvar. Qual linha de código HTML representa a melhor prática para este propósito?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>B</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">B</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> O elemento <code>&lt;input&gt;</code> com <code>id="idade"</code> e <code>type="number"</code> restringe e otimiza a entrada de dados numéricos no navegador, permitindo a captura direta pelo ID via JavaScript.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #2: Alinhamento Estrutural da Tabela [1. Camada HTML]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Ao adicionarmos uma nova coluna de dados no corpo da tabela (<code>&lt;tbody&gt;</code>), o que é obrigatório fazer no cabeçalho (<code>&lt;thead&gt;</code>) para não quebrar o layout visual da grade?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>A</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">A</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> Para que uma tabela HTML permaneça alinhada, o número de colunas (<code>&lt;th&gt;</code>) no cabeçalho deve ser exatamente igual ao número de células (<code>&lt;td&gt;</code>) em cada linha do corpo.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #3: Impacto da Estilização na Nova Coluna [2. CSS Mínimo]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Considere a regra CSS mínima utilizada no projeto:
+<code>table, th, td { border: 1px solid #334155; border-collapse: collapse; }</code>
+O que acontece com as novas tags <code>&lt;th&gt;Idade&lt;/th&gt;</code> e <code>&lt;td&gt;</code> recém-adicionadas?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>C</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">C</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> Como a regra CSS utiliza seletores de elemento puros (<code>th</code> e <code>td</code>), qualquer nova coluna criada no HTML receberá instantaneamente a mesma borda e estilo de colapso, mantendo o padrão sem exigir novo CSS.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #4: Construção do Objeto em Memória [3. Captura e Inserção (Create)]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Na função <code>salvar()</code>, quando estamos cadastrando um novo aluno (modo de inserção), como o novo campo deve ser lido e adicionado ao array <code>alunos</code>?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>A</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">A</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> O array <code>alunos</code> armazena objetos estruturados. Para cadastrar um novo elemento com a idade, criamos o par chave-valor <code>idade: i.value</code> junto com os demais atributos dentro do método <code>push()</code>.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #5: Resetando os Inputs Após o Cadastro [3. Limpeza de Formulário]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Após salvar com sucesso, os campos de digitação devem ser esvaziados para a próxima operação. Qual das alternativas limpa adequadamente os três campos de entrada de uma só vez?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>B</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">B</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> Em JavaScript, o encadeamento de atribuições <code>n.value = e.value = i.value = "";</code> redefine com elegância a propriedade <code>value</code> de todos os nós de input selecionados para uma string vazia.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #6: Tratamento de Dados Legados com Nullish Coalescing [4. Renderização (Read)]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Caso o usuário já possua dados salvos no LocalStorage antes da adição da coluna idade, alguns objetos não terão a propriedade <code>idade</code> definida. Como renderizar a linha com segurança sem exibir 'undefined'?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>A</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">A</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> O operador de coalescência nula (<code>??</code>) verifica se o valor à esquerda é <code>null</code> ou <code>undefined</code>. Se for, ele aplica o valor alternativo (neste caso, o traço <code>"-"</code>), evitando que a palavra 'undefined' apareça na tabela.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #7: Carregando Dados no Formulário [5. Modo de Edição (Update)]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Quando o usuário clica no botão 'Editar', a função <code>editar(id)</code> localiza o aluno no array e deve preencher os inputs da tela. Qual linha é necessária para carregar a idade?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>B</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">B</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> Os elementos <code>&lt;input&gt;</code> recebem valores através de sua propriedade <code>.value</code>. A expressão <code>a.idade || ""</code> garante que, caso o aluno não tenha idade informada, o campo fique vazio em vez de apresentar erro.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #8: Persistindo a Modificação de um Registro Existente [5. Modo de Edição (Update)]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Se <code>idEditando</code> não for nulo na função <code>salvar()</code>, significa que estamos alterando um aluno existente. Como atualizar a idade do aluno localizado?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>A</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">A</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> A variável <code>a</code> armazena uma referência ao objeto específico dentro do array <code>alunos</code>. Atribuir <code>a.idade = i.value</code> atualiza diretamente a propriedade desse objeto em memória.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #9: Adaptação da Função persistir() e carregar() [6. Persistência (LocalStorage)]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Ao adicionarmos o campo <code>idade</code> aos objetos do array <code>alunos</code>, quais modificações precisam ser feitas dentro da função <code>persistir()</code> mostrada abaixo?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>C</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">C</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> Essa é uma das maiores vantagens da serialização JSON: a função <code>persistir()</code> é agnóstica quanto ao número de campos do objeto. Ela simplesmente converte todo o estado do array em texto e o armazena no LocalStorage.
+                    </div>
+                </div>
+            
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #10: Compatibilidade de Backup com Exportar() e Importar() [7. I/O e Exportação]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">Ao exportar e importar o arquivo JSON via <code>Blob</code> e <code>FileReader</code>, o que ocorrerá com os alunos que agora possuem o campo idade?</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>A</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">A</strong> 
+                         <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>
+                    </div>
+                    <div class="painel-feedback correto" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> Por trabalhar diretamente com strings JSON válidas, tanto a exportação (via Blob) quanto a leitura de arquivo (via <code>FileReader</code> e <code>JSON.parse</code>) são universais. Qualquer propriedade adicionada aos objetos em memória é salva e recarregada sem alterações nos métodos de I/O.
+                    </div>
+                </div>
+            </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <button class="btn btn-pdf" onclick="window.print()">
+                🖨️ Imprimir ou Salvar em PDF
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    /* ============================================================
+       BANCO DE DADOS DE QUESTÕES (10 QUESTÕES OBJETIVAS)
+       Cobre todas as partes da manutenção: HTML, CSS, JS,
+       LocalStorage, JSON, Modos de Edição e Coalescência.
+       ============================================================ */
+    const QUESTOES = [
+        {
+            id: 1,
+            categoria: "1. Camada HTML",
+            titulo: "Declaração Semântica do Novo Campo",
+            enunciado: "Para permitir que o usuário digite a idade de um novo aluno, precisamos inserir um novo elemento de formulário antes do botão Salvar. Qual linha de código HTML representa a melhor prática para este propósito?",
+            codigo: `<div class="linha-inputs">
+    <input id="nome" placeholder="Nome">
+    <input id="email" placeholder="E-mail">
+    <!-- QUAL LINHA DEVE SER INSERIDA AQUI? -->
+    <button class="btn-acao btn-azul" id="btnSalvar" onclick="salvar()">Salvar</button>
+</div>`,
+            alternativas: [
+                { id: "A", texto: "<code>&lt;span id=\"idade\"&gt;Idade&lt;/span&gt;</code>" },
+                { id: "B", texto: "<code>&lt;input id=\"idade\" type=\"number\" placeholder=\"Idade\"&gt;</code>" },
+                { id: "C", texto: "<code>&lt;textarea name=\"idade\" value=\"0\"&gt;</code>" },
+                { id: "D", texto: "<code>&lt;div id=\"idade\" contenteditable=\"false\"&gt;&lt;/div&gt;</code>" }
+            ],
+            correta: "B",
+            explicacao: "O elemento <code>&lt;input&gt;</code> com <code>id=\"idade\"</code> e <code>type=\"number\"</code> restringe e otimiza a entrada de dados numéricos no navegador, permitindo a captura direta pelo ID via JavaScript."
+        },
+        {
+            id: 2,
+            categoria: "1. Camada HTML",
+            titulo: "Alinhamento Estrutural da Tabela",
+            enunciado: "Ao adicionarmos uma nova coluna de dados no corpo da tabela (<code>&lt;tbody&gt;</code>), o que é obrigatório fazer no cabeçalho (<code>&lt;thead&gt;</code>) para não quebrar o layout visual da grade?",
+            codigo: `<table class="tabela-dados">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <!-- O QUE DEVE SER ADICIONADO AQUI? -->
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+</table>`,
+            alternativas: [
+                { id: "A", texto: "Adicionar uma nova tag <code>&lt;th&gt;Idade&lt;/th&gt;</code> na mesma ordem em que os dados aparecem no corpo." },
+                { id: "B", texto: "Definir <code>colspan=\"2\"</code> na tag <code>&lt;th&gt;ID&lt;/th&gt;</code>." },
+                { id: "C", texto: "Não é necessário alterar o <code>&lt;thead&gt;</code>, pois a tabela se redimensiona automaticamente." },
+                { id: "D", texto: "Adicionar uma tag <code>&lt;tr id=\"idade\"&gt;</code> fora do <code>&lt;thead&gt;</code>." }
+            ],
+            correta: "A",
+            explicacao: "Para que uma tabela HTML permaneça alinhada, o número de colunas (<code>&lt;th&gt;</code>) no cabeçalho deve ser exatamente igual ao número de células (<code>&lt;td&gt;</code>) em cada linha do corpo."
+        },
+        {
+            id: 3,
+            categoria: "2. CSS Mínimo",
+            titulo: "Impacto da Estilização na Nova Coluna",
+            enunciado: "Considere a regra CSS mínima utilizada no projeto:\n<code>table, th, td { border: 1px solid #334155; border-collapse: collapse; }</code>\nO que acontece com as novas tags <code>&lt;th&gt;Idade&lt;/th&gt;</code> e <code>&lt;td&gt;</code> recém-adicionadas?",
+            codigo: `table,
+th,
+td {
+    border: 1px solid #334155;
+    border-collapse: collapse;
+}`,
+            alternativas: [
+                { id: "A", texto: "Elas ficam sem bordas até que uma classe CSS específica seja criada para elas." },
+                { id: "B", texto: "O navegador emite um erro de renderização caso não haja um seletor específico para 'idade'." },
+                { id: "C", texto: "Elas herdam automaticamente a borda e o colapso, pois o seletor universal de tags já contempla todo e qualquer <code>th</code> e <code>td</code>." },
+                { id: "D", texto: "A propriedade <code>border-collapse</code> é desativada automaticamente." }
+            ],
+            correta: "C",
+            explicacao: "Como a regra CSS utiliza seletores de elemento puros (<code>th</code> e <code>td</code>), qualquer nova coluna criada no HTML receberá instantaneamente a mesma borda e estilo de colapso, mantendo o padrão sem exigir novo CSS."
+        },
+        {
+            id: 4,
+            categoria: "3. Captura e Inserção (Create)",
+            titulo: "Construção do Objeto em Memória",
+            enunciado: "Na função <code>salvar()</code>, quando estamos cadastrando um novo aluno (modo de inserção), como o novo campo deve ser lido e adicionado ao array <code>alunos</code>?",
+            codigo: `function salvar() {
+    const n = document.getElementById("nome");
+    const e = document.getElementById("email");
+    const i = document.getElementById("idade");
+
+    if (!n.value) return alert("Preencha o nome!");
+
+    if (!idEditando) {
+        // QUAL LINHA INSERE O OBJETO CORRETAMENTE?
+    }
+}`,
+            alternativas: [
+                { id: "A", texto: "<code>alunos.push({ id: proximoId++, nome: n.value, email: e.value, idade: i.value });</code>" },
+                { id: "B", texto: "<code>alunos.push(n.value, e.value, i.value);</code>" },
+                { id: "C", texto: "<code>alunos[i] = { nome: n, email: e };</code>" },
+                { id: "D", texto: "<code>localStorage.setItem(i.value, alunos);</code>" }
+            ],
+            correta: "A",
+            explicacao: "O array <code>alunos</code> armazena objetos estruturados. Para cadastrar um novo elemento com a idade, criamos o par chave-valor <code>idade: i.value</code> junto com os demais atributos dentro do método <code>push()</code>."
+        },
+        {
+            id: 5,
+            categoria: "3. Limpeza de Formulário",
+            titulo: "Resetando os Inputs Após o Cadastro",
+            enunciado: "Após salvar com sucesso, os campos de digitação devem ser esvaziados para a próxima operação. Qual das alternativas limpa adequadamente os três campos de entrada de uma só vez?",
+            codigo: `// Após persistir() e listar():
+// Como resetar os campos nome, email e idade?`,
+            alternativas: [
+                { id: "A", texto: "<code>n = e = i = null;</code>" },
+                { id: "B", texto: "<code>n.value = e.value = i.value = \"\";</code>" },
+                { id: "C", texto: "<code>document.clearAllInputs();</code>" },
+                { id: "D", texto: "<code>i.value = undefined;</code>" }
+            ],
+            correta: "B",
+            explicacao: "Em JavaScript, o encadeamento de atribuições <code>n.value = e.value = i.value = \"\";</code> redefine com elegância a propriedade <code>value</code> de todos os nós de input selecionados para uma string vazia."
+        },
+        {
+            id: 6,
+            categoria: "4. Renderização (Read)",
+            titulo: "Tratamento de Dados Legados com Nullish Coalescing",
+            enunciado: "Caso o usuário já possua dados salvos no LocalStorage antes da adição da coluna idade, alguns objetos não terão a propriedade <code>idade</code> definida. Como renderizar a linha com segurança sem exibir 'undefined'?",
+            codigo: `alunos.forEach(a => {
+    tbody.innerHTML += \`<tr>
+        <td>\${a.id}</td>
+        <td>\${a.nome}</td>
+        <td>\${a.email}</td>
+        <!-- O QUE COLOCAR AQUI? -->
+        <td>...</td>
+    </tr>\`;
+});`,
+            alternativas: [
+                { id: "A", texto: "<code>&lt;td&gt;\${a.idade ?? \"-\"}&lt;/td&gt;</code>" },
+                { id: "B", texto: "<code>&lt;td&gt;\${a.idade.error()}&lt;/td&gt;</code>" },
+                { id: "C", texto: "<code>&lt;td&gt;\${delete a.idade}&lt;/td&gt;</code>" },
+                { id: "D", texto: "<code>&lt;td&gt;\${JSON.parse(a.idade)}&lt;/td&gt;</code>" }
+            ],
+            correta: "A",
+            explicacao: "O operador de coalescência nula (<code>??</code>) verifica se o valor à esquerda é <code>null</code> ou <code>undefined</code>. Se for, ele aplica o valor alternativo (neste caso, o traço <code>\"-\"</code>), evitando que a palavra 'undefined' apareça na tabela."
+        },
+        {
+            id: 7,
+            categoria: "5. Modo de Edição (Update)",
+            titulo: "Carregando Dados no Formulário",
+            enunciado: "Quando o usuário clica no botão 'Editar', a função <code>editar(id)</code> localiza o aluno no array e deve preencher os inputs da tela. Qual linha é necessária para carregar a idade?",
+            codigo: `function editar(id) {
+    const a = alunos.find(x => x.id === id);
+    document.getElementById("nome").value = a.nome;
+    document.getElementById("email").value = a.email;
+    // O QUE DEVE SER ADICIONADO AQUI?
+    idEditando = id;
+    document.getElementById("btnSalvar").innerText = "Atualizar #" + id;
+}`,
+            alternativas: [
+                { id: "A", texto: "<code>document.getElementById(\"idade\").innerHTML = a.idade;</code>" },
+                { id: "B", texto: "<code>document.getElementById(\"idade\").value = a.idade || \"\";</code>" },
+                { id: "C", texto: "<code>alunos.idade = document.getElementById(\"idade\");</code>" },
+                { id: "D", texto: "<code>localStorage.getItem(\"idade\");</code>" }
+            ],
+            correta: "B",
+            explicacao: "Os elementos <code>&lt;input&gt;</code> recebem valores através de sua propriedade <code>.value</code>. A expressão <code>a.idade || \"\"</code> garante que, caso o aluno não tenha idade informada, o campo fique vazio em vez de apresentar erro."
+        },
+        {
+            id: 8,
+            categoria: "5. Modo de Edição (Update)",
+            titulo: "Persistindo a Modificação de um Registro Existente",
+            enunciado: "Se <code>idEditando</code> não for nulo na função <code>salvar()</code>, significa que estamos alterando um aluno existente. Como atualizar a idade do aluno localizado?",
+            codigo: `if (idEditando) {
+    const a = alunos.find(x => x.id === idEditando);
+    a.nome = n.value;
+    a.email = e.value;
+    // COMO ATUALIZAR A IDADE DO OBJETO ENCONTRADO?
+    idEditando = null;
+    document.getElementById("btnSalvar").innerText = "Salvar";
+}`,
+            alternativas: [
+                { id: "A", texto: "<code>a.idade = i.value;</code>" },
+                { id: "B", texto: "<code>alunos.find(i.value);</code>" },
+                { id: "C", texto: "<code>idEditando.idade = i;</code>" },
+                { id: "D", texto: "<code>a = { idade: i.value };</code>" }
+            ],
+            correta: "A",
+            explicacao: "A variável <code>a</code> armazena uma referência ao objeto específico dentro do array <code>alunos</code>. Atribuir <code>a.idade = i.value</code> atualiza diretamente a propriedade desse objeto em memória."
+        },
+        {
+            id: 9,
+            categoria: "6. Persistência (LocalStorage)",
+            titulo: "Adaptação da Função persistir() e carregar()",
+            enunciado: "Ao adicionarmos o campo <code>idade</code> aos objetos do array <code>alunos</code>, quais modificações precisam ser feitas dentro da função <code>persistir()</code> mostrada abaixo?",
+            codigo: `function persistir() {
+    localStorage.setItem(CHAVE, JSON.stringify(alunos));
+}`,
+            alternativas: [
+                { id: "A", texto: "É necessário concatenar manualmente: <code>JSON.stringify(alunos) + i.value</code>." },
+                { id: "B", texto: "É necessário criar uma chave separada no LocalStorage para a idade: <code>localStorage.setItem(\"idade\", ...)</code>." },
+                { id: "C", texto: "Nenhuma modificação! Como <code>JSON.stringify()</code> converte todo o array e seus objetos automaticamente, o novo campo já é gravado de forma transparente." },
+                { id: "D", texto: "A função precisa ser reescrita usando loops <code>for</code> obrigatórios." }
+            ],
+            correta: "C",
+            explicacao: "Essa é uma das maiores vantagens da serialização JSON: a função <code>persistir()</code> é agnóstica quanto ao número de campos do objeto. Ela simplesmente converte todo o estado do array em texto e o armazena no LocalStorage."
+        },
+        {
+            id: 10,
+            categoria: "7. I/O e Exportação",
+            titulo: "Compatibilidade de Backup com Exportar() e Importar()",
+            enunciado: "Ao exportar e importar o arquivo JSON via <code>Blob</code> e <code>FileReader</code>, o que ocorrerá com os alunos que agora possuem o campo idade?",
+            codigo: `// Exportação via Blob:
+const texto = JSON.stringify(alunos, null, 2);
+const blob = new Blob([texto], { type: "application/json" });`,
+            alternativas: [
+                { id: "A", texto: "O arquivo <code>alunos.json</code> baixado conterá automaticamente a propriedade <code>\"idade\"</code> em cada aluno, e a importação a restaurará sem precisar de nenhuma linha a mais de código." },
+                { id: "B", texto: "O navegador recusará o download porque o MIME-type não aceita novos atributos." },
+                { id: "C", texto: "A importação falhará porque o <code>FileReader</code> só aceita strings com até 2 propriedades por objeto." },
+                { id: "D", texto: "O campo idade será apagado durante o download." }
+            ],
+            correta: "A",
+            explicacao: "Por trabalhar diretamente com strings JSON válidas, tanto a exportação (via Blob) quanto a leitura de arquivo (via <code>FileReader</code> e <code>JSON.parse</code>) são universais. Qualquer propriedade adicionada aos objetos em memória é salva e recarregada sem alterações nos métodos de I/O."
+        }
+    ];
+
+    /* ============================================================
+       ESTADO DA APLICAÇÃO
+       ============================================================ */
+    let questaoAtualIndex = 0;
+    const respostasUsuario = {}; // { 1: 'B', 2: 'A', ... }
+
+    // RENDERIZAR SIDEBAR
+    function renderizarSidebar() {
+        const container = document.getElementById("sidebarQuestoes");
+        container.innerHTML = "";
+
+        QUESTOES.forEach((q, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "sidebar-item" + (idx === questaoAtualIndex ? " ativo" : "");
+            btn.id = "btnNavQ_" + q.id;
+            btn.onclick = () => irParaQuestao(idx);
+
+            const respondida = respostasUsuario[q.id] !== undefined;
+
+            btn.innerHTML = `
+                <span>Q${q.id}. ${q.titulo}</span>
+                <span class="status-dot ${respondida ? 'respondido' : ''}" id="dot_${q.id}"></span>
+            `;
+            container.appendChild(btn);
+        });
+
+        atualizarProgresso();
+    }
+
+    function atualizarProgresso() {
+        const total = QUESTOES.length;
+        const respondidas = Object.keys(respostasUsuario).length;
+        const porcentagem = Math.round((respondidas / total) * 100);
+
+        document.getElementById("txtProgresso").innerText = `${respondidas} / ${total} (${porcentagem}%)`;
+        document.getElementById("barraProgresso").style.width = porcentagem + "%";
+    }
+
+    function irParaQuestao(index) {
+        questaoAtualIndex = index;
+        fecharMenu();
+        renderizarQuestao();
+        renderizarSidebar();
+    }
+
+    // RENDERIZAR A QUESTÃO ATIVA NA TELA
+    function renderizarQuestao() {
+        const q = QUESTOES[questaoAtualIndex];
+        const container = document.getElementById("containerQuestao");
+        document.getElementById("metaCategoria").innerText = `Questão ${q.id} de ${QUESTOES.length} • Categoria: ${q.categoria}`;
+
+        const respostaAtual = respostasUsuario[q.id];
+        const jaRespondida = respostaAtual !== undefined;
+
+        let opcoesHtml = "";
+        q.alternativas.forEach(alt => {
+            const checked = respostaAtual === alt.id ? "checked" : "";
+            const selecionadaClass = respostaAtual === alt.id ? "selecionada" : "";
+
+            opcoesHtml += `
+                <label class="opcao-item ${selecionadaClass}" onclick="selecionarOpcao(${q.id}, '${alt.id}')">
+                    <input type="radio" name="opcao_${q.id}" value="${alt.id}" ${checked}>
+                    <div class="texto-opcao">
+                        <strong>${alt.id})</strong> ${alt.texto}
+                    </div>
+                </label>
+            `;
+        });
+
+        let feedbackHtml = "";
+        if (jaRespondida) {
+            const acertou = respostaAtual === q.correta;
+            feedbackHtml = `
+                <div class="painel-feedback ${acertou ? 'correto' : 'incorreto'}" style="display: block;">
+                    <strong>${acertou ? '✅ Resposta Correta!' : '❌ Resposta Incorreta!'} (Gabarito: ${q.correta})</strong>
+                    ${q.explicacao}
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="card-questao">
+                <div class="enunciado">
+                    <span style="color:#38bdf8;">#${q.id}.</span> ${q.enunciado.replace(/\n/g, '<br>')}
+                </div>
+
+                ${q.codigo ? `<pre class="bloco-codigo-enunciado">${escapeHtml(q.codigo)}</pre>` : ''}
+
+                <div class="lista-alternativas">
+                    ${opcoesHtml}
+                </div>
+
+                <div id="areaFeedback_${q.id}">
+                    ${feedbackHtml}
+                </div>
+
+                <div class="barra-acoes">
+                    <div>
+                        <button class="btn btn-nav" onclick="irParaQuestao(${questaoAtualIndex - 1})" ${questaoAtualIndex === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+                            ◀ Anterior
+                        </button>
+                        <button class="btn btn-nav" onclick="irParaQuestao(${questaoAtualIndex + 1})" ${questaoAtualIndex === QUESTOES.length - 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+                            Próxima ▶
+                        </button>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-confirmar" onclick="confirmarResposta(${q.id})">
+                            ✔️ Confirmar Resposta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function selecionarOpcao(questaoId, opcaoId) {
+        respostasUsuario[questaoId] = opcaoId;
+        renderizarQuestao();
+        renderizarSidebar();
+    }
+
+    function confirmarResposta(questaoId) {
+        if (!respostasUsuario[questaoId]) {
+            return alert("Por favor, selecione uma das alternativas antes de confirmar!");
+        }
+        renderizarQuestao();
+    }
+
+    // RELATÓRIO OFICIAL PARA SALVAR EM PDF
+    function gerarRelatorioFinal() {
+        const total = QUESTOES.length;
+        const respondidas = Object.keys(respostasUsuario).length;
+
+        if (respondidas < total) {
+            if (!confirm(`Você respondeu ${respondidas} de ${total} questões. Deseja finalizar e gerar o gabarito mesmo assim?`)) {
+                return;
+            }
+        }
+
+        let acertos = 0;
+        let erros = 0;
+
+        let detalheHtml = "";
+
+        QUESTOES.forEach(q => {
+            const resp = respostasUsuario[q.id];
+            const acertou = resp === q.correta;
+
+            if (acertou) acertos++;
+            else erros++;
+
+            detalheHtml += `
+                <div class="card-questao" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:700; margin-bottom:6px;">
+                        Questão #${q.id}: ${q.titulo} [${q.categoria}]
+                    </div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;">${q.enunciado}</div>
+                    <div style="font-size:0.85rem; font-family:monospace; margin-bottom:6px;">
+                        • Sua resposta: <strong>${resp || "NÃO RESPONDIDA"}</strong> | 
+                        • Gabarito oficial: <strong style="color:#10b981;">${q.correta}</strong> 
+                        ${acertou ? ' <span style="color:#10b981;font-weight:bold;">(ACERTOU)</span>' : ' <span style="color:#ef4444;font-weight:bold;">(ERROU)</span>'}
+                    </div>
+                    <div class="painel-feedback ${acertou ? 'correto' : 'incorreto'}" style="display:block; padding:10px; font-size:0.85rem;">
+                        <strong>Justificativa Técnica:</strong> ${q.explicacao}
+                    </div>
+                </div>
+            `;
+        });
+
+        const aproveitamento = Math.round((acertos / total) * 100);
+
+        document.getElementById("placarAcertos").innerText = acertos;
+        document.getElementById("placarErros").innerText = erros;
+        document.getElementById("placarAproveitamento").innerText = aproveitamento + "%";
+        document.getElementById("dataEmissao").innerText = `Avaliação técnica gerada em: ${new Date().toLocaleString('pt-BR')}`;
+        document.getElementById("detalhamentoQuestoesPDF").innerHTML = detalheHtml;
+
+        const painel = document.getElementById("painelRelatorioFinal");
+        painel.style.display = "block";
+        painel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // UTILITÁRIOS VISUAIS
+    function escapeHtml(txt) {
+        return txt
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlayMenu');
+        const aberto = sidebar.classList.contains('aberta');
+        if (aberto) {
+            sidebar.classList.remove('aberta');
+            overlay.classList.remove('ativo');
+        } else {
+            sidebar.classList.add('aberta');
+            overlay.classList.add('ativo');
+        }
+    }
+
+    function fecharMenu() {
+        document.getElementById('sidebar').classList.remove('aberta');
+        document.getElementById('overlayMenu').classList.remove('ativo');
+    }
+
+    function voltarAoTopo() {
+        document.getElementById('inicioPrincipal').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.addEventListener('scroll', () => {
+        const btn = document.getElementById('btnTopo');
+        if (window.scrollY > 300) btn.classList.remove('oculto');
+        else btn.classList.add('oculto');
+    });
+
+    // INICIALIZAÇÃO
+    renderizarSidebar();
+    renderizarQuestao();
+</script>
+
+
+</body></html>

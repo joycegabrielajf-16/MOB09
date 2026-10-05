@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)https://almeida-cma.github.io/mob09/0-pratica.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Adicionando o Campo Idade ao CRUD (HTML + JS Puro)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .btn-topo {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #0f172a;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(56,189,248,0.3);
+            transition: all 0.25s;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .btn-topo:hover { transform: scale(1.1) translateY(-3px); }
+        .btn-topo.oculto { opacity: 0; pointer-events: none; transform: scale(0.5); }
+
+        .btn-menu-flutuante {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #0f172a;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(56,189,248,0.3);
+            transition: all 0.25s;
+            z-index: 1400;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay-menu {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .overlay-menu.ativo { opacity: 1; pointer-events: auto; }
+
+        .sidebar {
+            width: 320px;
+            background: #1e293b;
+            padding: 22px 16px;
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-right: 1px solid #334155;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-logo {
+            font-size: 1.15rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-sub {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .categoria-titulo {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 1.5px;
+            margin: 16px 0 8px;
+            padding-left: 8px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.83rem;
+            color: #cbd5e1;
+            transition: all 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .sidebar-item:hover { background: #334155; color: #fff; }
+        .sidebar-item.ativo {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #0f172a;
+            font-weight: 800;
+        }
+
+        .main {
+            margin-left: 320px;
+            flex: 1;
+            padding: 30px 40px 100px;
+            min-height: 100vh;
+        }
+
+        .main-header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .main-header p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .meta-degrau {
+            display: inline-block;
+            background: #0369a1;
+            color: #bae6fd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-top: 8px;
+            border: 1px solid #38bdf8;
+        }
+
+        .card-missao {
+            background: #1e293b;
+            border-left: 4px solid #38bdf8;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 18px 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .card-missao strong { color: #7dd3fc; }
+        .card-missao code {
+            background: #0f172a;
+            color: #facc15;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .destaque-mudanca {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px dashed #38bdf8;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: #f1f5f9;
+        }
+        .destaque-mudanca span.novo {
+            color: #4ade80;
+            font-weight: bold;
+            background: rgba(74, 222, 128, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .btn-acao {
+            display: inline-block;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            margin-bottom: 20px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.15s;
+        }
+        .btn-acao:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56,189,248,0.3);
+        }
+
+        .preview-wrapper {
+            background: #020617;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 24px;
+            border: 1px solid #334155;
+        }
+        .preview-header {
+            background: #1e293b;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+        .preview-header .ponto {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .ponto.vermelho { background: #ef4444; }
+        .ponto.amarelo { background: #f59e0b; }
+        .ponto.verde { background: #10b981; }
+
+        .preview-titulo {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+        .preview-iframe {
+            width: 100%;
+            height: 380px;
+            border: none;
+            background: #ffffff;
+            display: block;
+        }
+
+        .abas {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid #334155;
+            flex-wrap: wrap;
+        }
+        .aba {
+            padding: 10px 18px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .aba:hover { color: #cbd5e1; background: #1e293b; }
+        .aba.ativa { color: #38bdf8; border-bottom-color: #38bdf8; }
+
+        .bloco-codigo {
+            display: none;
+            position: relative;
+            background: #020617;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+            border-top: none;
+        }
+        .bloco-codigo.ativo { display: block; }
+        .bloco-codigo .btn-copiar {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 800;
+            font-family: inherit;
+            z-index: 2;
+        }
+        .bloco-codigo pre {
+            padding: 20px;
+            color: #93c5fd;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre;
+            max-height: 480px;
+        }
+
+        .card-quiz {
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .opcao-item {
+            display: flex;
+            gap: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .opcao-item:hover { border-color: #38bdf8; background: #1a2234; }
+        .opcao-item.selecionada { border-color: #38bdf8; background: rgba(56,189,248,0.12); }
+        .opcao-item input { margin-top: 4px; accent-color: #38bdf8; }
+
+        .painel-feedback {
+            display: none;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 14px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .painel-feedback.correto { background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; }
+        .painel-feedback.incorreto { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; }
+
+        #painelRelatorioFinal {
+            display: none;
+            background: #1e293b;
+            border: 1px solid #38bdf8;
+            border-radius: 12px;
+            padding: 26px;
+            margin-top: 24px;
+        }
+        .placar-resumo {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin: 18px 0;
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 14px;
+            border: 1px solid #334155;
+        }
+        .placar-item .numero { font-size: 1.8rem; font-weight: 900; color: #38bdf8; }
+        .placar-item .rotulo { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .sidebar, .btn-topo, .btn-menu-flutuante, .abas, .bloco-codigo, .btn-acao, .preview-wrapper, .destaque-mudanca { display: none !important; }
+            .main { margin-left: 0 !important; padding: 0 !important; }
+            #painelRelatorioFinal { display: block !important; border: none !important; color: #000 !important; }
+            .placar-resumo { background: #f8fafc !important; border: 1px solid #000 !important; color: #000 !important; }
+            .placar-item .numero { color: #000 !important; }
+            .card-quiz { page-break-inside: avoid; border: 1px solid #999 !important; background: #fff !important; color: #000 !important; margin-bottom: 16px !important; }
+            .painel-feedback { display: block !important; background: #f1f5f9 !important; border: 1px solid #333 !important; color: #000 !important; }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.aberta { transform: translateX(0); }
+            .main { margin-left: 0; padding: 20px 16px 110px; }
+            .btn-menu-flutuante { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="btn-topo" id="btnTopo" onclick="voltarAoTopo()" title="Voltar ao início">⬆️</button>
+<button class="btn-menu-flutuante" id="btnMenuFlutuante" onclick="toggleMenu()" aria-label="Abrir menu">☰</button>
+<div class="overlay-menu" id="overlayMenu" onclick="fecharMenu()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">🎓 CRUD ALUNOS (JSON)</div>
+    <div class="sidebar-sub">HTML + JS = Código Completo</div>
+
+    <div class="categoria-titulo">Degraus de Aprendizagem</div>
+    <div id="navDegraus"><button class="sidebar-item" data-id="degrau-1"><span>⚪</span> Degrau 1: Ponto de Partida Original</button><button class="sidebar-item" data-id="degrau-2"><span>🟢</span> Degrau 2: A Camada HTML (Input e Coluna)</button><button class="sidebar-item" data-id="degrau-3"><span>🟡</span> Degrau 3: Inserção e Leitura (Create &amp; Read)</button><button class="sidebar-item" data-id="degrau-4"><span>🔵</span> Degrau 4: Sistema Completo (Update, I/O e Reset)</button></div>
+
+    <div class="categoria-titulo">Avaliação Técnica</div>
+    <button class="sidebar-item ativo" id="btnAbaQuiz" onclick="mostrarQuiz()">
+        <span>📝 Simulado &amp; Gabarito (PDF)</span>
+    </button>
+</aside>
+
+<main class="main" id="inicioPrincipal">
+    <div id="conteudoPrincipal">
+            <div class="main-header">
+                <h1>📝 Simulado Técnico: Adicionando Novos Campos</h1>
+                <p>Responda às questões sobre as alterações em HTML, DOM, eventos, LocalStorage e JSON.</p>
+                <span class="meta-degrau">10 Questões Objetivas com Gabarito</span>
+            </div>
+
+            <div style="margin: 16px 0;">
+                <button class="btn-acao" onclick="gerarRelatorioPDF()">
+                    📄 Finalizar e Gerar Gabarito / PDF
+                </button>
+            </div>
+
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 1: Declaração de Input no HTML</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">No modelo de código que utiliza referências diretas por ID (ex: <code>nome.value</code>), qual é a forma correta de declarar o campo de idade para que ele fique acessível como <code>idade.value</code> no script?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_1" value="A" checked="" onchange="responderQuestao(1, 'A')">
+                        <div><strong>A)</strong> <code>&lt;input id="idade" type="number" placeholder="Idade"&gt;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_1" value="B" onchange="responderQuestao(1, 'B')">
+                        <div><strong>B)</strong> <code>&lt;input class="idade" placeholder="Idade"&gt;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_1" value="C" onchange="responderQuestao(1, 'C')">
+                        <div><strong>C)</strong> <code>&lt;span id="idade"&gt;&lt;/span&gt;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_1" value="D" onchange="responderQuestao(1, 'D')">
+                        <div><strong>D)</strong> <code>&lt;div id="idade"&gt;&lt;/div&gt;</code></div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        O atributo <code>id="idade"</code> cria o identificador global no DOM que permite ao JavaScript acessar o elemento diretamente pela variável <code>idade</code>, e o <code>type="number"</code> restringe para caracteres numéricos.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 2: Inclusão no Cabeçalho da Tabela</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">No HTML original, temos: <code>&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Nome&lt;/th&gt;&lt;th&gt;E-mail&lt;/th&gt;&lt;th&gt;Ações&lt;/th&gt;&lt;/tr&gt;</code>. Qual alteração mantém a simetria com as linhas de dados?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_2" value="A" checked="" onchange="responderQuestao(2, 'A')">
+                        <div><strong>A)</strong> Adicionar <code>&lt;th&gt;Idade&lt;/th&gt;</code> entre <code>E-mail</code> e <code>Ações</code>.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_2" value="B" onchange="responderQuestao(2, 'B')">
+                        <div><strong>B)</strong> Adicionar <code>&lt;th colspan="2"&gt;E-mail&lt;/th&gt;</code>.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_2" value="C" onchange="responderQuestao(2, 'C')">
+                        <div><strong>C)</strong> Não precisa alterar o cabeçalho, pois a tabela ajusta as colunas automaticamente.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_2" value="D" onchange="responderQuestao(2, 'D')">
+                        <div><strong>D)</strong> Substituir <code>E-mail</code> por <code>Idade</code>.</div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        Para que uma tabela mantenha suas colunas devidamente alinhadas, cada célula <code>&lt;td&gt;</code> criada no corpo deve possuir seu respectivo <code>&lt;th&gt;</code> no cabeçalho na mesma ordem.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 3: Inclusão no Objeto do Aluno (Create)</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">Na função <code>salvar()</code>, na parte que cadastra um novo aluno (<code>else</code>), como incluímos a propriedade idade no array?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_3" value="A" checked="" onchange="responderQuestao(3, 'A')">
+                        <div><strong>A)</strong> <code>alunos.push({ id: proximoId++, nome: nome.value, email: email.value, idade: idade.value });</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_3" value="B" onchange="responderQuestao(3, 'B')">
+                        <div><strong>B)</strong> <code>alunos.push(nome.value, email.value, idade.value);</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_3" value="C" onchange="responderQuestao(3, 'C')">
+                        <div><strong>C)</strong> <code>alunos.idade = idade.value;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_3" value="D" onchange="responderQuestao(3, 'D')">
+                        <div><strong>D)</strong> <code>alunos.push({ id: proximoId++, dados: [nome, email, idade] });</code></div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        Cada aluno é um objeto estruturado em memória. Inserir a chave <code>idade: idade.value</code> garante que a propriedade fará parte do registro que será salvo no array.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 4: Limpeza dos Campos após Salvar</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">O código original esvaziava os campos com <code>nome.value = email.value = "";</code>. Para esvaziar também o novo campo de idade, qual linha deve ser usada?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_4" value="A" checked="" onchange="responderQuestao(4, 'A')">
+                        <div><strong>A)</strong> <code>nome.value = email.value = idade.value = "";</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_4" value="B" onchange="responderQuestao(4, 'B')">
+                        <div><strong>B)</strong> <code>idade.reset();</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_4" value="C" onchange="responderQuestao(4, 'C')">
+                        <div><strong>C)</strong> <code>clear(nome, email, idade);</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_4" value="D" onchange="responderQuestao(4, 'D')">
+                        <div><strong>D)</strong> <code>idade.value = null;</code></div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        O encadeamento de atribuição <code>nome.value = email.value = idade.value = "";</code> redefine o valor de todos os campos para uma string vazia em uma única linha limpa.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 5: Operador de Fallback na Leitura</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">Na função <code>listar()</code>, utilizamos <code>${a.idade || "-"}</code> para renderizar a idade. Por que usamos <code>||</code> em vez de <code>??</code> nesse caso?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_5" value="A" checked="" onchange="responderQuestao(5, 'A')">
+                        <div><strong>A)</strong> Porque <code>||</code> trata tanto <code>null</code>/<code>undefined</code> quanto a string vazia <code>""</code>, exibindo <code>"-"</code> em todos os casos de campo não preenchido.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_5" value="B" onchange="responderQuestao(5, 'B')">
+                        <div><strong>B)</strong> Porque <code>??</code> não existe em JavaScript.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_5" value="C" onchange="responderQuestao(5, 'C')">
+                        <div><strong>C)</strong> Porque <code>||</code> é mais rápido que <code>??</code>.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_5" value="D" onchange="responderQuestao(5, 'D')">
+                        <div><strong>D)</strong> Porque <code>??</code> só funciona com números.</div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        O operador <code>??</code> (nullish coalescing) só trata <code>null</code> e <code>undefined</code>. Como o input vazio grava <code>""</code>, o <code>??</code> não ativaria o fallback. Já o <code>||</code> considera <code>""</code> como falsy e exibe <code>"-"</code>.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 6: Carregamento no Modo de Edição</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">Na função <code>editar(id)</code>, qual linha devemos acrescentar para que o valor da idade do aluno selecionado apareça no input para alteração?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_6" value="A" checked="" onchange="responderQuestao(6, 'A')">
+                        <div><strong>A)</strong> <code>idade.value = a.idade || "";</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_6" value="B" onchange="responderQuestao(6, 'B')">
+                        <div><strong>B)</strong> <code>a.idade = idade.value;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_6" value="C" onchange="responderQuestao(6, 'C')">
+                        <div><strong>C)</strong> <code>idade.innerHTML = a.idade;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_6" value="D" onchange="responderQuestao(6, 'D')">
+                        <div><strong>D)</strong> <code>localStorage.getItem(a.idade);</code></div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        Ao clicar em 'Editar', os inputs do formulário devem receber os valores atuais do objeto. A expressão <code>a.idade || ""</code> garante que, caso não haja idade gravada, o input fique vazio.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 7: Atualização do Registro Existente (Update)</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">Quando <code>idEditando</code> não for nulo na função <code>salvar()</code>, como salvamos a nova idade no objeto encontrado?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_7" value="A" checked="" onchange="responderQuestao(7, 'A')">
+                        <div><strong>A)</strong> <code>a.idade = idade.value;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_7" value="B" onchange="responderQuestao(7, 'B')">
+                        <div><strong>B)</strong> <code>alunos[idEditando] = idade.value;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_7" value="C" onchange="responderQuestao(7, 'C')">
+                        <div><strong>C)</strong> <code>idade.value = a.idade;</code></div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_7" value="D" onchange="responderQuestao(7, 'D')">
+                        <div><strong>D)</strong> <code>a.push(idade.value);</code></div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        A variável <code>a</code> armazena a referência do objeto localizado por <code>alunos.find()</code>. Atribuir <code>a.idade = idade.value</code> atualiza diretamente a propriedade daquele aluno no array.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 8: Comportamento da Função persistir()</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">A função <code>persistir()</code> é declarada como: <code>function persistir() { localStorage.setItem(CHAVE, JSON.stringify(alunos)); }</code>. O que precisa ser alterado nela após incluir o campo idade?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_8" value="A" checked="" onchange="responderQuestao(8, 'A')">
+                        <div><strong>A)</strong> Absolutamente nada, pois <code>JSON.stringify()</code> serializa automaticamente todas as propriedades de cada objeto do array.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_8" value="B" onchange="responderQuestao(8, 'B')">
+                        <div><strong>B)</strong> É necessário concatenar <code>+ idade.value</code> dentro do <code>setItem</code>.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_8" value="C" onchange="responderQuestao(8, 'C')">
+                        <div><strong>C)</strong> É preciso criar uma segunda chave no LocalStorage chamada 'idades.json'.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_8" value="D" onchange="responderQuestao(8, 'D')">
+                        <div><strong>D)</strong> Precisa ser reescrita usando um loop <code>for</code> manual.</div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        A serialização JSON é universal: qualquer propriedade nova adicionada aos objetos em memória é automaticamente codificada em texto JSON e salva no LocalStorage sem alterar a função.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 9: Exportação e Importação de Arquivos JSON</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">Ao clicar em '💾 Exportar' e gerar o download do arquivo <code>alunos.json</code>, os novos dados de idade estarão presentes?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_9" value="A" checked="" onchange="responderQuestao(9, 'A')">
+                        <div><strong>A)</strong> Sim, porque a exportação pega o array completo <code>alunos</code> e o converte em Blob, e a importação com <code>FileReader</code> o restaura integralmente.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_9" value="B" onchange="responderQuestao(9, 'B')">
+                        <div><strong>B)</strong> Não, porque a função <code>exportar()</code> precisa de um parâmetro extra para cada coluna nova.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_9" value="C" onchange="responderQuestao(9, 'C')">
+                        <div><strong>C)</strong> Apenas se o usuário tiver preenchido a idade em todos os alunos.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_9" value="D" onchange="responderQuestao(9, 'D')">
+                        <div><strong>D)</strong> O navegador rejeitará o arquivo JSON por conter 4 campos.</div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        Como a exportação e importação operam diretamente sobre o array de objetos e texto JSON puro via Blob e FileReader, qualquer novo atributo é preservado no arquivo baixado e importado.
+                    </div>
+                </div>
+                </div>
+            
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão 10: Exclusão e Reset</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">O que acontece com as funções <code>excluir(id)</code> e <code>resetar()</code> após a inclusão do campo idade?</p>
+                    <div>
+                    <label class="opcao-item selecionada">
+                        <input type="radio" name="q_10" value="A" checked="" onchange="responderQuestao(10, 'A')">
+                        <div><strong>A)</strong> Continuam funcionando perfeitamente sem nenhuma modificação, pois excluem pelo ID ou limpam a chave inteira do LocalStorage.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_10" value="B" onchange="responderQuestao(10, 'B')">
+                        <div><strong>B)</strong> Precisam ser atualizadas para deletar a idade separadamente.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_10" value="C" onchange="responderQuestao(10, 'C')">
+                        <div><strong>C)</strong> O <code>filter()</code> da exclusão falha se o objeto tiver mais de 3 propriedades.</div>
+                    </label>
+                
+                    <label class="opcao-item ">
+                        <input type="radio" name="q_10" value="D" onchange="responderQuestao(10, 'D')">
+                        <div><strong>D)</strong> O <code>localStorage.removeItem()</code> não apaga propriedades numéricas.</div>
+                    </label>
+                </div>
+                    <div>
+                    <div class="painel-feedback correto" style="display:block;">
+                        <strong>✅ Correto! (Gabarito: A)</strong>
+                        A função <code>excluir()</code> filtra o array pelo <code>id</code> do aluno (removendo o objeto completo com todas as suas propriedades), e <code>resetar()</code> apaga o registro inteiro do LocalStorage.
+                    </div>
+                </div>
+                </div>
+            
+
+            <!-- PAINEL DE RELATÓRIO PDF -->
+            <div id="painelRelatorioFinal">
+                <h2 style="color:#38bdf8; margin-bottom:6px;">Relatório Oficial de Desempenho e Gabarito</h2>
+                <p style="color:#94a3b8; font-size:0.85rem;" id="dataEmissao"></p>
+
+                <div class="placar-resumo">
+                    <div class="placar-item">
+                        <div class="numero" id="placarAcertos">0</div>
+                        <div class="rotulo">Acertos</div>
+                    </div>
+                    <div class="placar-item">
+                        <div class="numero" id="placarErros" style="color:#ef4444;">0</div>
+                        <div class="rotulo">Erros</div>
+                    </div>
+                    <div class="placar-item">
+                        <div class="numero" id="placarAproveitamento" style="color:#10b981;">0%</div>
+                        <div class="rotulo">Aproveitamento</div>
+                    </div>
+                </div>
+
+                <div id="detalhesPDF"></div>
+
+                <div style="text-align:right; margin-top:16px;">
+                    <button class="btn-acao" onclick="window.print()">
+                        🖨️ Imprimir ou Salvar em PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+</main>
+
+<script>
+    /* ============================================================
+       DEGRAUS PEDAGÓGICOS DA EVOLUÇÃO (HTML + JS = CÓDIGO COMPLETO)
+       ============================================================ */
+    const DEGRAUS = [
+        // ==================== DEGRAU 1 ====================
+        {
+            id: 'degrau-1',
+            nome: 'Degrau 1: Ponto de Partida Original',
+            icone: '⚪',
+            nivel: '⚪ Diagnóstico do Código Inicial',
+            missao: 'Este é exatamente o seu código original. Repare que o script utiliza o atalho direto por ID do navegador (ex: <code>nome.value</code>, <code>email.value</code> e <code>lista.innerHTML</code>) e manipula o objeto contendo apenas <code>{ id, nome, email }</code>.',
+            modificacao: `Estado inicial do seu código:
+• HTML: inputs "nome" e "email", e tabela com 4 colunas (ID, Nome, E-mail, Ações).
+• JS: funções salvar(), editar() e listar() atuando somente sobre nome e email.`,
+            html: `<h1>Alunos</h1>
+
+<input id="nome" placeholder="Nome">
+<input id="email" placeholder="E-mail">
+<button onclick="salvar()">Salvar</button>
+
+<button onclick="exportar()">💾 Exportar</button>
+<input type="file" accept=".json" onchange="importar(event)">
+<button onclick="resetar()">🔄 Resetar</button>
+
+<hr>
+
+<table border="1">
+<tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Ações</th></tr>
+<tbody id="lista"></tbody>
+</table>`,
+            js: `// ---------- ESTADO ----------
+let alunos = [];          // array de objetos { id, nome, email }
+let idEditando = null;
+let proximoId = 1;
+
+const CHAVE = "alunos.json";
+
+// ---------- ABRIR ----------
+function carregar() {
+    const salvo = localStorage.getItem(CHAVE);
+    if (salvo) {
+        alunos = JSON.parse(salvo);
+        proximoId = alunos.length ? Math.max(...alunos.map(a => a.id)) + 1 : 1;
+    }
+    listar();
+}
+
+// ---------- PERSISTIR ----------
+function persistir() {
+    localStorage.setItem(CHAVE, JSON.stringify(alunos));
+}
+
+// ---------- READ ----------
+function listar() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+    alunos.forEach(a => {
+        lista.innerHTML += \`<tr>
+            <td>\${a.id}</td><td>\${a.nome}</td><td>\${a.email}</td>
+            <td>
+                <button onclick="editar(\${a.id})">Editar</button>
+                <button onclick="excluir(\${a.id})">Excluir</button>
+            </td></tr>\`;
+    });
+}
+
+// ---------- CREATE / UPDATE ----------
+function salvar() {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+
+    if (idEditando) {
+        const a = alunos.find(x => x.id === idEditando);
+        a.nome  = nome.value;
+        a.email = email.value;
+        idEditando = null;
+    } else {
+        alunos.push({ id: proximoId++, nome: nome.value, email: email.value });
+    }
+    nome.value = email.value = "";
+    persistir();
+    listar();
+}
+
+// ---------- EDIT ----------
+function editar(id) {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+    const a = alunos.find(x => x.id === id);
+    nome.value  = a.nome;
+    email.value = a.email;
+    idEditando  = id;
+}
+
+// ---------- DELETE ----------
+function excluir(id) {
+    if (confirm("Excluir aluno?")) {
+        alunos = alunos.filter(a => a.id !== id);
+        persistir();
+        listar();
+    }
+}
+
+// ---------- EXPORTAR ----------
+function exportar() {
+    const texto = JSON.stringify(alunos, null, 2);
+    const blob  = new Blob([texto], { type: "application/json" });
+    const a     = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "alunos.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+}
+
+// ---------- IMPORTAR ----------
+function importar(evento) {
+    const arquivo = evento.target.files[0];
+    if (!arquivo) return;
+
+    const leitor = new FileReader();
+    leitor.onload = () => {
+        try {
+            const dados = JSON.parse(leitor.result);
+            if (!Array.isArray(dados)) throw new Error("O JSON não é uma lista.");
+
+            alunos = dados;
+            proximoId = alunos.length ? Math.max(...alunos.map(a => a.id)) + 1 : 1;
+
+            persistir();
+            listar();
+            alert("Importado com sucesso!");
+        } catch (e) {
+            alert("Arquivo inválido: " + e.message);
+        }
+    };
+    leitor.readAsText(arquivo);
+}
+
+// ---------- RESETAR ----------
+function resetar() {
+    if (!confirm("Apagar tudo?")) return;
+    localStorage.removeItem(CHAVE);
+    alunos = [];
+    proximoId = 1;
+    listar();
+}
+
+// ---------- INICIAR ----------
+carregar();`
+        },
+
+        // ==================== DEGRAU 2 ====================
+        {
+            id: 'degrau-2',
+            nome: 'Degrau 2: A Camada HTML (Input e Coluna)',
+            icone: '🟢',
+            nivel: '🟢 Passo 1: Interface Declarativa',
+            missao: 'No padrão do seu script, cada `<input id="...">` gera automaticamente uma variável global no navegador acessível por seu identificador. Portanto, adicionamos `<input id="idade" type="number" placeholder="Idade">` e a coluna `<th>Idade</th>` na tabela. <strong>O JavaScript ainda é o mesmo do Degrau 1</strong> — apenas o HTML mudou. O preview mostra a coluna aguardando a lógica.',
+            modificacao: `Alterações no HTML:
+1. Inserir: <span class="novo">&lt;input id="idade" type="number" placeholder="Idade"&gt;</span> ao lado de email.
+2. Inserir: <span class="novo">&lt;th&gt;Idade&lt;/th&gt;</span> antes de &lt;th&gt;Ações&lt;/th&gt;.
+
+O JS permanece idêntico ao Degrau 1.`,
+            html: `<h1>Alunos</h1>
+
+<input id="nome" placeholder="Nome">
+<input id="email" placeholder="E-mail">
+<!-- 1. CAMPO ADICIONADO -->
+<input id="idade" type="number" placeholder="Idade">
+<button onclick="salvar()">Salvar</button>
+
+<button onclick="exportar()">💾 Exportar</button>
+<input type="file" accept=".json" onchange="importar(event)">
+<button onclick="resetar()">🔄 Resetar</button>
+
+<hr>
+
+<table border="1">
+<!-- 2. CABEÇALHO COM A COLUNA IDADE -->
+<tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Idade</th><th>Ações</th></tr>
+<tbody id="lista"></tbody>
+</table>`,
+            js: `// ============================================================
+// O JS é EXATAMENTE o mesmo do Degrau 1.
+// A coluna "Idade" existe no HTML, mas o JS ainda não a manipula.
+// ============================================================
+let alunos = [];          // array de objetos { id, nome, email }
+let idEditando = null;
+let proximoId = 1;
+
+const CHAVE = "alunos.json";
+
+function carregar() {
+    const salvo = localStorage.getItem(CHAVE);
+    if (salvo) {
+        alunos = JSON.parse(salvo);
+        proximoId = alunos.length ? Math.max(...alunos.map(a => a.id)) + 1 : 1;
+    }
+    listar();
+}
+
+function persistir() {
+    localStorage.setItem(CHAVE, JSON.stringify(alunos));
+}
+
+function listar() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+    alunos.forEach(a => {
+        // A coluna Idade aparece, mas o valor ainda não existe no objeto
+        lista.innerHTML += \`<tr>
+            <td>\${a.id}</td><td>\${a.nome}</td><td>\${a.email}</td>
+            <td style="color:gray;">(aguardando JS)</td>
+            <td>
+                <button onclick="editar(\${a.id})">Editar</button>
+                <button onclick="excluir(\${a.id})">Excluir</button>
+            </td></tr>\`;
+    });
+}
+
+function salvar() {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+
+    if (idEditando) {
+        const a = alunos.find(x => x.id === idEditando);
+        a.nome  = nome.value;
+        a.email = email.value;
+        idEditando = null;
+    } else {
+        alunos.push({ id: proximoId++, nome: nome.value, email: email.value });
+    }
+    nome.value = email.value = "";
+    persistir();
+    listar();
+}
+
+function editar(id) {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+    const a = alunos.find(x => x.id === id);
+    nome.value  = a.nome;
+    email.value = a.email;
+    idEditando  = id;
+}
+
+function excluir(id) {
+    if (confirm("Excluir aluno?")) {
+        alunos = alunos.filter(a => a.id !== id);
+        persistir();
+        listar();
+    }
+}
+
+function exportar() {
+    const texto = JSON.stringify(alunos, null, 2);
+    const blob  = new Blob([texto], { type: "application/json" });
+    const a     = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "alunos.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+}
+
+function importar(evento) {
+    const arquivo = evento.target.files[0];
+    if (!arquivo) return;
+    const leitor = new FileReader();
+    leitor.onload = () => {
+        try {
+            const dados = JSON.parse(leitor.result);
+            if (!Array.isArray(dados)) throw new Error("O JSON não é uma lista.");
+            alunos = dados;
+            proximoId = alunos.length ? Math.max(...alunos.map(a => a.id)) + 1 : 1;
+            persistir();
+            listar();
+            alert("Importado com sucesso!");
+        } catch (e) {
+            alert("Arquivo inválido: " + e.message);
+        }
+    };
+    leitor.readAsText(arquivo);
+}
+
+function resetar() {
+    if (!confirm("Apagar tudo?")) return;
+    localStorage.removeItem(CHAVE);
+    alunos = [];
+    proximoId = 1;
+    listar();
+}
+
+carregar();`
+        },
+
+        // ==================== DEGRAU 3 ====================
+        {
+            id: 'degrau-3',
+            nome: 'Degrau 3: Inserção e Leitura (Create & Read)',
+            icone: '🟡',
+            nivel: '🟡 Passo 2: Lógica em Memória',
+            missao: 'Agora damos vida ao campo. No JS, lemos o valor diretamente com <code>document.getElementById("idade").value</code> (ou pelo atalho global <code>idade.value</code>). No <code>salvar()</code>, adicionamos <code>idade: idade.value</code> ao objeto. Na função <code>listar()</code>, desenhamos a célula com <code>a.idade || "-"</code> para tratar valores vazios.',
+            modificacao: `Alterações cirúrgicas no JavaScript:
+1. Em salvar() [criação]:
+   alunos.push({ id: proximoId++, nome: nome.value, email: email.value, <span class="novo">idade: idade.value</span> });
+   nome.value = email.value = <span class="novo">idade.value = ""</span>;
+
+2. Em listar() [leitura]:
+   lista.innerHTML += \`... &lt;td&gt;\${a.email}&lt;/td&gt;<span class="novo">&lt;td&gt;\${a.idade || "-"}&lt;/td&gt;</span>...\`;`,
+            html: `<h1>Alunos</h1>
+
+<input id="nome" placeholder="Nome">
+<input id="email" placeholder="E-mail">
+<input id="idade" type="number" placeholder="Idade">
+<button onclick="salvar()">Salvar</button>
+
+<button onclick="exportar()">💾 Exportar</button>
+<input type="file" accept=".json" onchange="importar(event)">
+<button onclick="resetar()">🔄 Resetar</button>
+
+<hr>
+
+<table border="1">
+<tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Idade</th><th>Ações</th></tr>
+<tbody id="lista"></tbody>
+</table>`,
+            js: `let alunos = [];
+let idEditando = null;
+let proximoId = 1;
+const CHAVE = "alunos_deg3";
+
+function persistir() {
+    localStorage.setItem(CHAVE, JSON.stringify(alunos));
+}
+
+function listar() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+    alunos.forEach(a => {
+        lista.innerHTML += \`<tr>
+            <td>\${a.id}</td>
+            <td>\${a.nome}</td>
+            <td>\${a.email}</td>
+            <!-- Renderiza idade ou traço caso vazio -->
+            <td>\${a.idade || "-"}</td>
+            <td><button disabled>Aguardando Passo 4</button></td></tr>\`;
+    });
+}
+
+function salvar() {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+    const idade = document.getElementById("idade");
+
+    if (!nome.value) return alert("Preencha o nome!");
+
+    // Adiciona o objeto com idade:
+    alunos.push({ 
+        id: proximoId++, 
+        nome: nome.value, 
+        email: email.value, 
+        idade: idade.value 
+    });
+
+    // Limpa os 3 inputs:
+    nome.value = email.value = idade.value = "";
+    persistir();
+    listar();
+}
+
+listar();`
+        },
+
+        // ==================== DEGRAU 4 ====================
+        {
+            id: 'degrau-4',
+            nome: 'Degrau 4: Sistema Completo (Update, I/O e Reset)',
+            icone: '🔵',
+            nivel: '🔵 Passo 3: O Sistema 100% Integrado',
+            missao: 'Finalizamos o ciclo completo: ensinamos a função <code>editar(id)</code> a carregar a idade com <code>idade.value = a.idade || "";</code> e a função <code>salvar()</code> a atualizar o objeto quando em edição com <code>a.idade = idade.value;</code>. O LocalStorage, Exportação e Importação funcionam sem precisar de alteração!',
+            modificacao: `Alterações finais no JavaScript:
+1. Em editar(id):
+   <span class="novo">idade.value = a.idade || "";</span>
+
+2. Em salvar() [ramo de edição]:
+   <span class="novo">a.idade = idade.value;</span>
+
+3. As funções persistir(), carregar(), exportar(), importar() e resetar() permanecem 100% idênticas!`,
+            html: `<h1>Alunos</h1>
+
+<input id="nome" placeholder="Nome">
+<input id="email" placeholder="E-mail">
+<input id="idade" type="number" placeholder="Idade">
+<button onclick="salvar()">Salvar</button>
+
+<button onclick="exportar()">💾 Exportar</button>
+<input type="file" accept=".json" onchange="importar(event)">
+<button onclick="resetar()">🔄 Resetar</button>
+
+<hr>
+
+<table border="1">
+<tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Idade</th><th>Ações</th></tr>
+<tbody id="lista"></tbody>
+</table>`,
+            js: `// ---------- ESTADO ----------
+let alunos = [];          // array de objetos { id, nome, email, idade }
+let idEditando = null;
+let proximoId = 1;
+
+const CHAVE = "alunos_com_idade.json";
+
+// ---------- ABRIR ----------
+function carregar() {
+    const salvo = localStorage.getItem(CHAVE);
+    if (salvo) {
+        alunos = JSON.parse(salvo);
+        proximoId = alunos.length ? Math.max(...alunos.map(a => a.id)) + 1 : 1;
+    }
+    listar();
+}
+
+// ---------- PERSISTIR ----------
+function persistir() {
+    localStorage.setItem(CHAVE, JSON.stringify(alunos));
+}
+
+// ---------- READ ----------
+function listar() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+    alunos.forEach(a => {
+        lista.innerHTML += \`<tr>
+            <td>\${a.id}</td>
+            <td>\${a.nome}</td>
+            <td>\${a.email}</td>
+            <td>\${a.idade || "-"}</td>
+            <td>
+                <button onclick="editar(\${a.id})">Editar</button>
+                <button onclick="excluir(\${a.id})">Excluir</button>
+            </td></tr>\`;
+    });
+}
+
+// ---------- CREATE / UPDATE ----------
+function salvar() {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+    const idade = document.getElementById("idade");
+
+    if (idEditando) {
+        const a = alunos.find(x => x.id === idEditando);
+        a.nome  = nome.value;
+        a.email = email.value;
+        a.idade = idade.value; // ATUALIZAÇÃO DA IDADE
+        idEditando = null;
+    } else {
+        alunos.push({ 
+            id: proximoId++, 
+            nome: nome.value, 
+            email: email.value, 
+            idade: idade.value // INCLUSÃO DA IDADE
+        });
+    }
+    nome.value = email.value = idade.value = "";
+    persistir();
+    listar();
+}
+
+// ---------- EDIT ----------
+function editar(id) {
+    const nome  = document.getElementById("nome");
+    const email = document.getElementById("email");
+    const idade = document.getElementById("idade");
+    const a = alunos.find(x => x.id === id);
+    nome.value  = a.nome;
+    email.value = a.email;
+    idade.value = a.idade || ""; // PREENCHE O INPUT COM A IDADE
+    idEditando  = id;
+}
+
+// ---------- DELETE ----------
+function excluir(id) {
+    if (confirm("Excluir aluno?")) {
+        alunos = alunos.filter(a => a.id !== id);
+        persistir();
+        listar();
+    }
+}
+
+// ---------- EXPORTAR ----------
+function exportar() {
+    const texto = JSON.stringify(alunos, null, 2);
+    const blob  = new Blob([texto], { type: "application/json" });
+    const a     = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "alunos.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+}
+
+// ---------- IMPORTAR ----------
+function importar(evento) {
+    const arquivo = evento.target.files[0];
+    if (!arquivo) return;
+
+    const leitor = new FileReader();
+    leitor.onload = () => {
+        try {
+            const dados = JSON.parse(leitor.result);
+            if (!Array.isArray(dados)) throw new Error("O JSON não é uma lista.");
+
+            alunos = dados;
+            proximoId = alunos.length ? Math.max(...alunos.map(a => a.id)) + 1 : 1;
+
+            persistir();
+            listar();
+            alert("Importado com sucesso!");
+        } catch (e) {
+            alert("Arquivo inválido: " + e.message);
+        }
+    };
+    leitor.readAsText(arquivo);
+}
+
+// ---------- RESETAR ----------
+function resetar() {
+    if (!confirm("Apagar tudo?")) return;
+    localStorage.removeItem(CHAVE);
+    alunos = [];
+    proximoId = 1;
+    listar();
+}
+
+// ---------- INICIAR ----------
+carregar();`
+        }
+    ];
+
+    /* ============================================================
+       BANCO DE QUESTÕES DO QUIZ DE FIXAÇÃO (OBJETIVAS)
+       ============================================================ */
+    const QUESTOES_QUIZ = [
+        {
+            id: 1,
+            titulo: "Declaração de Input no HTML",
+            enunciado: "No modelo de código que utiliza referências diretas por ID (ex: <code>nome.value</code>), qual é a forma correta de declarar o campo de idade para que ele fique acessível como <code>idade.value</code> no script?",
+            alternativas: [
+                { id: "A", texto: "<code>&lt;input id=\"idade\" type=\"number\" placeholder=\"Idade\"&gt;</code>" },
+                { id: "B", texto: "<code>&lt;input class=\"idade\" placeholder=\"Idade\"&gt;</code>" },
+                { id: "C", texto: "<code>&lt;span id=\"idade\"&gt;&lt;/span&gt;</code>" },
+                { id: "D", texto: "<code>&lt;div id=\"idade\"&gt;&lt;/div&gt;</code>" }
+            ],
+            correta: "A",
+            explicacao: "O atributo <code>id=\"idade\"</code> cria o identificador global no DOM que permite ao JavaScript acessar o elemento diretamente pela variável <code>idade</code>, e o <code>type=\"number\"</code> restringe para caracteres numéricos."
+        },
+        {
+            id: 2,
+            titulo: "Inclusão no Cabeçalho da Tabela",
+            enunciado: "No HTML original, temos: <code>&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Nome&lt;/th&gt;&lt;th&gt;E-mail&lt;/th&gt;&lt;th&gt;Ações&lt;/th&gt;&lt;/tr&gt;</code>. Qual alteração mantém a simetria com as linhas de dados?",
+            alternativas: [
+                { id: "A", texto: "Adicionar <code>&lt;th&gt;Idade&lt;/th&gt;</code> entre <code>E-mail</code> e <code>Ações</code>." },
+                { id: "B", texto: "Adicionar <code>&lt;th colspan=\"2\"&gt;E-mail&lt;/th&gt;</code>." },
+                { id: "C", texto: "Não precisa alterar o cabeçalho, pois a tabela ajusta as colunas automaticamente." },
+                { id: "D", texto: "Substituir <code>E-mail</code> por <code>Idade</code>." }
+            ],
+            correta: "A",
+            explicacao: "Para que uma tabela mantenha suas colunas devidamente alinhadas, cada célula <code>&lt;td&gt;</code> criada no corpo deve possuir seu respectivo <code>&lt;th&gt;</code> no cabeçalho na mesma ordem."
+        },
+        {
+            id: 3,
+            titulo: "Inclusão no Objeto do Aluno (Create)",
+            enunciado: "Na função <code>salvar()</code>, na parte que cadastra um novo aluno (<code>else</code>), como incluímos a propriedade idade no array?",
+            alternativas: [
+                { id: "A", texto: "<code>alunos.push({ id: proximoId++, nome: nome.value, email: email.value, idade: idade.value });</code>" },
+                { id: "B", texto: "<code>alunos.push(nome.value, email.value, idade.value);</code>" },
+                { id: "C", texto: "<code>alunos.idade = idade.value;</code>" },
+                { id: "D", texto: "<code>alunos.push({ id: proximoId++, dados: [nome, email, idade] });</code>" }
+            ],
+            correta: "A",
+            explicacao: "Cada aluno é um objeto estruturado em memória. Inserir a chave <code>idade: idade.value</code> garante que a propriedade fará parte do registro que será salvo no array."
+        },
+        {
+            id: 4,
+            titulo: "Limpeza dos Campos após Salvar",
+            enunciado: "O código original esvaziava os campos com <code>nome.value = email.value = \"\";</code>. Para esvaziar também o novo campo de idade, qual linha deve ser usada?",
+            alternativas: [
+                { id: "A", texto: "<code>nome.value = email.value = idade.value = \"\";</code>" },
+                { id: "B", texto: "<code>idade.reset();</code>" },
+                { id: "C", texto: "<code>clear(nome, email, idade);</code>" },
+                { id: "D", texto: "<code>idade.value = null;</code>" }
+            ],
+            correta: "A",
+            explicacao: "O encadeamento de atribuição <code>nome.value = email.value = idade.value = \"\";</code> redefine o valor de todos os campos para uma string vazia em uma única linha limpa."
+        },
+        {
+            id: 5,
+            titulo: "Operador de Fallback na Leitura",
+            enunciado: "Na função <code>listar()</code>, utilizamos <code>\${a.idade || \"-\"}</code> para renderizar a idade. Por que usamos <code>||</code> em vez de <code>??</code> nesse caso?",
+            alternativas: [
+                { id: "A", texto: "Porque <code>||</code> trata tanto <code>null</code>/<code>undefined</code> quanto a string vazia <code>\"\"</code>, exibindo <code>\"-\"</code> em todos os casos de campo não preenchido." },
+                { id: "B", texto: "Porque <code>??</code> não existe em JavaScript." },
+                { id: "C", texto: "Porque <code>||</code> é mais rápido que <code>??</code>." },
+                { id: "D", texto: "Porque <code>??</code> só funciona com números." }
+            ],
+            correta: "A",
+            explicacao: "O operador <code>??</code> (nullish coalescing) só trata <code>null</code> e <code>undefined</code>. Como o input vazio grava <code>\"\"</code>, o <code>??</code> não ativaria o fallback. Já o <code>||</code> considera <code>\"\"</code> como falsy e exibe <code>\"-\"</code>."
+        },
+        {
+            id: 6,
+            titulo: "Carregamento no Modo de Edição",
+            enunciado: "Na função <code>editar(id)</code>, qual linha devemos acrescentar para que o valor da idade do aluno selecionado apareça no input para alteração?",
+            alternativas: [
+                { id: "A", texto: "<code>idade.value = a.idade || \"\";</code>" },
+                { id: "B", texto: "<code>a.idade = idade.value;</code>" },
+                { id: "C", texto: "<code>idade.innerHTML = a.idade;</code>" },
+                { id: "D", texto: "<code>localStorage.getItem(a.idade);</code>" }
+            ],
+            correta: "A",
+            explicacao: "Ao clicar em 'Editar', os inputs do formulário devem receber os valores atuais do objeto. A expressão <code>a.idade || \"\"</code> garante que, caso não haja idade gravada, o input fique vazio."
+        },
+        {
+            id: 7,
+            titulo: "Atualização do Registro Existente (Update)",
+            enunciado: "Quando <code>idEditando</code> não for nulo na função <code>salvar()</code>, como salvamos a nova idade no objeto encontrado?",
+            alternativas: [
+                { id: "A", texto: "<code>a.idade = idade.value;</code>" },
+                { id: "B", texto: "<code>alunos[idEditando] = idade.value;</code>" },
+                { id: "C", texto: "<code>idade.value = a.idade;</code>" },
+                { id: "D", texto: "<code>a.push(idade.value);</code>" }
+            ],
+            correta: "A",
+            explicacao: "A variável <code>a</code> armazena a referência do objeto localizado por <code>alunos.find()</code>. Atribuir <code>a.idade = idade.value</code> atualiza diretamente a propriedade daquele aluno no array."
+        },
+        {
+            id: 8,
+            titulo: "Comportamento da Função persistir()",
+            enunciado: "A função <code>persistir()</code> é declarada como: <code>function persistir() { localStorage.setItem(CHAVE, JSON.stringify(alunos)); }</code>. O que precisa ser alterado nela após incluir o campo idade?",
+            alternativas: [
+                { id: "A", texto: "Absolutamente nada, pois <code>JSON.stringify()</code> serializa automaticamente todas as propriedades de cada objeto do array." },
+                { id: "B", texto: "É necessário concatenar <code>+ idade.value</code> dentro do <code>setItem</code>." },
+                { id: "C", texto: "É preciso criar uma segunda chave no LocalStorage chamada 'idades.json'." },
+                { id: "D", texto: "Precisa ser reescrita usando um loop <code>for</code> manual." }
+            ],
+            correta: "A",
+            explicacao: "A serialização JSON é universal: qualquer propriedade nova adicionada aos objetos em memória é automaticamente codificada em texto JSON e salva no LocalStorage sem alterar a função."
+        },
+        {
+            id: 9,
+            titulo: "Exportação e Importação de Arquivos JSON",
+            enunciado: "Ao clicar em '💾 Exportar' e gerar o download do arquivo <code>alunos.json</code>, os novos dados de idade estarão presentes?",
+            alternativas: [
+                { id: "A", texto: "Sim, porque a exportação pega o array completo <code>alunos</code> e o converte em Blob, e a importação com <code>FileReader</code> o restaura integralmente." },
+                { id: "B", texto: "Não, porque a função <code>exportar()</code> precisa de um parâmetro extra para cada coluna nova." },
+                { id: "C", texto: "Apenas se o usuário tiver preenchido a idade em todos os alunos." },
+                { id: "D", texto: "O navegador rejeitará o arquivo JSON por conter 4 campos." }
+            ],
+            correta: "A",
+            explicacao: "Como a exportação e importação operam diretamente sobre o array de objetos e texto JSON puro via Blob e FileReader, qualquer novo atributo é preservado no arquivo baixado e importado."
+        },
+        {
+            id: 10,
+            titulo: "Exclusão e Reset",
+            enunciado: "O que acontece com as funções <code>excluir(id)</code> e <code>resetar()</code> após a inclusão do campo idade?",
+            alternativas: [
+                { id: "A", texto: "Continuam funcionando perfeitamente sem nenhuma modificação, pois excluem pelo ID ou limpam a chave inteira do LocalStorage." },
+                { id: "B", texto: "Precisam ser atualizadas para deletar a idade separadamente." },
+                { id: "C", texto: "O <code>filter()</code> da exclusão falha se o objeto tiver mais de 3 propriedades." },
+                { id: "D", texto: "O <code>localStorage.removeItem()</code> não apaga propriedades numéricas." }
+            ],
+            correta: "A",
+            explicacao: "A função <code>excluir()</code> filtra o array pelo <code>id</code> do aluno (removendo o objeto completo com todas as suas propriedades), e <code>resetar()</code> apaga o registro inteiro do LocalStorage."
+        }
+    ];
+
+    /* ============================================================
+       CONTROLE DE NAVEGAÇÃO E RENDERIZAÇÃO
+       ============================================================ */
+    const navDegraus = document.getElementById('navDegraus');
+    const conteudoPrincipal = document.getElementById('conteudoPrincipal');
+    let htmlCompletoAtual = '';
+    const respostasQuiz = {};
+
+    // Cria os botões dos degraus na sidebar
+    DEGRAUS.forEach(deg => {
+        const btn = document.createElement('button');
+        btn.className = 'sidebar-item';
+        btn.dataset.id = deg.id;
+        btn.innerHTML = `<span>${deg.icone}</span> ${deg.nome}`;
+        btn.onclick = () => mostrarDegrau(deg.id);
+        navDegraus.appendChild(btn);
+    });
+
+    function mostrarDegrau(id) {
+        const deg = DEGRAUS.find(d => d.id === id);
+        if (!deg) return;
+
+        // Atualiza sidebar
+        document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('ativo'));
+        const btnAtivo = document.querySelector(`.sidebar-item[data-id="${id}"]`);
+        if (btnAtivo) btnAtivo.classList.add('ativo');
+
+        fecharMenu();
+
+        // EQUAÇÃO MATEMÁTICA EXATA: HTML + JS = CÓDIGO COMPLETO
+        const htmlCompleto = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CRUD Alunos (JSON)</title>
+</head>
+<body>
+
+${deg.html}
+
+<script>
+${deg.js}
+<\/script>
+
+</body>
+</html>`;
+
+        htmlCompletoAtual = htmlCompleto;
+
+        // Escapa o HTML para exibição segura dentro do template literal
+        const htmlEscapado = escapeHtml(deg.html);
+        const jsEscapado = escapeHtml(deg.js);
+        const completoEscapado = escapeHtml(htmlCompleto);
+
+        conteudoPrincipal.innerHTML = `
+            <div class="main-header">
+                <h1>${deg.icone} ${deg.nome}</h1>
+                <span class="meta-degrau">${deg.nivel}</span>
+            </div>
+
+            <div class="card-missao">
+                🎯 <strong>O que você aprende neste degrau:</strong><br>
+                ${deg.missao}
+
+                <div class="destaque-mudanca">
+                    ${deg.modificacao.replace(/\n/g, '<br>')}
+                </div>
+            </div>
+
+            <button class="btn-acao" onclick="abrirEmNovaAba()">
+                🚀 Abrir este degrau em Nova Aba
+            </button>
+
+            <!-- PREVIEW EM TEMPO REAL (HTML PURO) -->
+            <div class="preview-wrapper">
+                <div class="preview-header">
+                    <div>
+                        <span class="ponto vermelho"></span>
+                        <span class="ponto amarelo"></span>
+                        <span class="ponto verde"></span>
+                    </div>
+                    <span class="preview-titulo">preview-${deg.id}.html (HTML Puro + JS)</span>
+                    <span></span>
+                </div>
+                <iframe class="preview-iframe" id="previewIframe"></iframe>
+            </div>
+
+            <!-- ABAS DE CÓDIGO: HTML + JS = CÓDIGO COMPLETO -->
+            <div class="abas">
+                <button class="aba ativa" onclick="trocarAba(this, 'html')">📄 HTML</button>
+                <button class="aba" onclick="trocarAba(this, 'js')">⚙️ JS</button>
+                <button class="aba" onclick="trocarAba(this, 'tudo')">📦 Código Completo (HTML + JS)</button>
+            </div>
+
+            <div class="bloco-codigo ativo" id="aba-html">
+                <button class="btn-copiar" onclick="copiarAba('aba-html', this)">📋 Copiar HTML</button>
+                <pre>${htmlEscapado}</pre>
+            </div>
+            <div class="bloco-codigo" id="aba-js">
+                <button class="btn-copiar" onclick="copiarAba('aba-js', this)">📋 Copiar JS</button>
+                <pre>${jsEscapado}</pre>
+            </div>
+            <div class="bloco-codigo" id="aba-tudo">
+                <button class="btn-copiar" onclick="copiarAba('aba-tudo', this)">📋 Copiar Tudo</button>
+                <pre>${completoEscapado}</pre>
+            </div>
+        `;
+
+        const iframe = document.getElementById('previewIframe');
+        iframe.srcdoc = htmlCompleto;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function mostrarQuiz() {
+        document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('ativo'));
+        document.getElementById('btnAbaQuiz').classList.add('ativo');
+        fecharMenu();
+
+        let questoesHtml = '';
+        QUESTOES_QUIZ.forEach(q => {
+            const resp = respostasQuiz[q.id];
+            let opcoes = '';
+            q.alternativas.forEach(alt => {
+                const checked = resp === alt.id ? 'checked' : '';
+                const classeSel = resp === alt.id ? 'selecionada' : '';
+                opcoes += `
+                    <label class="opcao-item ${classeSel}">
+                        <input type="radio" name="q_${q.id}" value="${alt.id}" ${checked}
+                               onchange="responderQuestao(${q.id}, '${alt.id}')">
+                        <div><strong>${alt.id})</strong> ${alt.texto}</div>
+                    </label>
+                `;
+            });
+
+            let feedback = '';
+            if (resp) {
+                const acertou = resp === q.correta;
+                feedback = `
+                    <div class="painel-feedback ${acertou ? 'correto' : 'incorreto'}" style="display:block;">
+                        <strong>${acertou ? '✅ Correto!' : '❌ Incorreto!'} (Gabarito: ${q.correta})</strong>
+                        ${q.explicacao}
+                    </div>
+                `;
+            }
+
+            questoesHtml += `
+                <div class="card-quiz">
+                    <h3 style="color:#38bdf8; margin-bottom:8px;">Questão ${q.id}: ${q.titulo}</h3>
+                    <p style="margin-bottom:12px; font-size:0.95rem;">${q.enunciado}</p>
+                    <div>${opcoes}</div>
+                    <div>${feedback}</div>
+                </div>
+            `;
+        });
+
+        conteudoPrincipal.innerHTML = `
+            <div class="main-header">
+                <h1>📝 Simulado Técnico: Adicionando Novos Campos</h1>
+                <p>Responda às questões sobre as alterações em HTML, DOM, eventos, LocalStorage e JSON.</p>
+                <span class="meta-degrau">10 Questões Objetivas com Gabarito</span>
+            </div>
+
+            <div style="margin: 16px 0;">
+                <button class="btn-acao" onclick="gerarRelatorioPDF()">
+                    📄 Finalizar e Gerar Gabarito / PDF
+                </button>
+            </div>
+
+            ${questoesHtml}
+
+            <!-- PAINEL DE RELATÓRIO PDF -->
+            <div id="painelRelatorioFinal">
+                <h2 style="color:#38bdf8; margin-bottom:6px;">Relatório Oficial de Desempenho e Gabarito</h2>
+                <p style="color:#94a3b8; font-size:0.85rem;" id="dataEmissao"></p>
+
+                <div class="placar-resumo">
+                    <div class="placar-item">
+                        <div class="numero" id="placarAcertos">0</div>
+                        <div class="rotulo">Acertos</div>
+                    </div>
+                    <div class="placar-item">
+                        <div class="numero" id="placarErros" style="color:#ef4444;">0</div>
+                        <div class="rotulo">Erros</div>
+                    </div>
+                    <div class="placar-item">
+                        <div class="numero" id="placarAproveitamento" style="color:#10b981;">0%</div>
+                        <div class="rotulo">Aproveitamento</div>
+                    </div>
+                </div>
+
+                <div id="detalhesPDF"></div>
+
+                <div style="text-align:right; margin-top:16px;">
+                    <button class="btn-acao" onclick="window.print()">
+                        🖨️ Imprimir ou Salvar em PDF
+                    </button>
+                </div>
+            </div>
+        `;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function responderQuestao(qId, altId) {
+        respostasQuiz[qId] = altId;
+        // Atualiza apenas o feedback e o destaque da questão, sem re-renderizar tudo
+        const card = document.querySelector(`.card-quiz:nth-of-type(${qId})`);
+        const questao = QUESTOES_QUIZ.find(q => q.id === qId);
+        if (!card || !questao) return;
+
+        // Atualiza seleção visual
+        card.querySelectorAll('.opcao-item').forEach(label => {
+            const input = label.querySelector('input');
+            if (input.value === altId) label.classList.add('selecionada');
+            else label.classList.remove('selecionada');
+        });
+
+        // Atualiza feedback
+        const acertou = altId === questao.correta;
+        let feedbackDiv = card.querySelector('.painel-feedback');
+        if (!feedbackDiv) {
+            feedbackDiv = document.createElement('div');
+            card.appendChild(feedbackDiv);
+        }
+        feedbackDiv.className = `painel-feedback ${acertou ? 'correto' : 'incorreto'}`;
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.innerHTML = `
+            <strong>${acertou ? '✅ Correto!' : '❌ Incorreto!'} (Gabarito: ${questao.correta})</strong>
+            ${questao.explicacao}
+        `;
+    }
+
+    function gerarRelatorioPDF() {
+        const total = QUESTOES_QUIZ.length;
+        const respondidas = Object.keys(respostasQuiz).length;
+
+        if (respondidas < total) {
+            if (!confirm(`Você respondeu ${respondidas} de ${total} questões. Deseja finalizar mesmo assim?`)) {
+                return;
+            }
+        }
+
+        let acertos = 0;
+        let erros = 0;
+        let detalhes = '';
+
+        QUESTOES_QUIZ.forEach(q => {
+            const resp = respostasQuiz[q.id];
+            const acertou = resp === q.correta;
+            if (acertou) acertos++;
+            else erros++;
+
+            detalhes += `
+                <div class="card-quiz" style="margin-top:10px; padding:12px;">
+                    <strong>Q${q.id}. ${q.titulo}</strong>
+                    <div style="font-size:0.85rem; margin:6px 0;">
+                        Sua resposta: <b>${resp || 'NÃO RESPONDIDA'}</b> | Gabarito: <b style="color:#10b981;">${q.correta}</b>
+                        ${acertou ? ' <span style="color:#10b981; font-weight:bold;">(ACERTOU)</span>' : ' <span style="color:#ef4444; font-weight:bold;">(ERROU)</span>'}
+                    </div>
+                    <div style="font-size:0.82rem; color:#cbd5e1;">Justificativa: ${q.explicacao}</div>
+                </div>
+            `;
+        });
+
+        const aproveitamento = Math.round((acertos / total) * 100);
+
+        document.getElementById('placarAcertos').innerText = acertos;
+        document.getElementById('placarErros').innerText = erros;
+        document.getElementById('placarAproveitamento').innerText = aproveitamento + '%';
+        document.getElementById('dataEmissao').innerText = `Gerado em: ${new Date().toLocaleString('pt-BR')}`;
+        document.getElementById('detalhesPDF').innerHTML = detalhes;
+
+        const painel = document.getElementById('painelRelatorioFinal');
+        painel.style.display = 'block';
+        painel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // UTILITÁRIOS
+    function abrirEmNovaAba() {
+        if (!htmlCompletoAtual) {
+            alert("Nenhum degrau carregado para abrir.");
+            return;
+        }
+        const blob = new Blob([htmlCompletoAtual], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+    }
+
+    function trocarAba(btn, tipo) {
+        document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
+        document.querySelectorAll('.bloco-codigo').forEach(b => b.classList.remove('ativo'));
+        btn.classList.add('ativa');
+        document.getElementById('aba-' + tipo).classList.add('ativo');
+    }
+
+    function copiarAba(idAba, btn) {
+        const texto = document.getElementById(idAba).querySelector('pre').innerText;
+        navigator.clipboard.writeText(texto).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = '✅ Copiado!';
+            setTimeout(() => btn.textContent = orig, 1800);
+        });
+    }
+
+    /**
+     * Escapa caracteres especiais para exibição segura dentro de template literals.
+     * Escapa: & < > ` $ (para evitar quebra do template literal externo)
+     */
+    function escapeHtml(txt) {
+        return String(txt)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/`/g, '&#96;')
+            .replace(/\$/g, '&#36;');
+    }
+
+    function toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlayMenu');
+        const aberto = sidebar.classList.contains('aberta');
+        if (aberto) {
+            sidebar.classList.remove('aberta');
+            overlay.classList.remove('ativo');
+        } else {
+            sidebar.classList.add('aberta');
+            overlay.classList.add('ativo');
+        }
+    }
+
+    function fecharMenu() {
+        document.getElementById('sidebar').classList.remove('aberta');
+        document.getElementById('overlayMenu').classList.remove('ativo');
+    }
+
+    function voltarAoTopo() {
+        document.getElementById('inicioPrincipal').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.addEventListener('scroll', () => {
+        const btn = document.getElementById('btnTopo');
+        if (window.scrollY > 300) btn.classList.remove('oculto');
+        else btn.classList.add('oculto');
+    });
+
+    // Inicia no Degrau 1
+    mostrarDegrau(DEGRAUS[0].id);
+</script>
+
+
+
+</body></html>
